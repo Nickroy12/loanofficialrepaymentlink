@@ -104,169 +104,276 @@ function PaymentContent() {
     router.push(`/payment/success?${params.toString()}`);
   };
 
+  const [activeTab, setActiveTab] = useState<"direct" | "qr">("direct");
+
   return (
-    <div className="w-full bg-white rounded-2xl border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden text-left">
-      {/* Session / countdown header */}
-      <div className="flex items-center justify-between px-6 py-3.5 bg-gray-50/60 border-b border-gray-100">
-        <span className="text-xs font-medium text-gray-500">
-          Session expires in
-        </span>
-        <Countdown expiresAt={expiresAt} onExpire={() => setIsExpired(true)} />
+    <div className="w-full bg-[#F6F5FD] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-purple-100/60 text-left">
+      {/* Solid Purple Header */}
+      <div className="bg-[#7635DC] text-white pt-7 pb-6 px-4 text-center">
+        <p className="text-xs font-medium text-purple-100/90 tracking-wide mb-1">
+          Payment Amount
+        </p>
+        <div className="text-3xl font-extrabold tracking-tight mb-2">
+          ₹ {amount}
+        </div>
+        <div className="inline-block">
+          <Countdown
+            expiresAt={expiresAt}
+            onExpire={() => setIsExpired(true)}
+            format="hh:mm:ss"
+            className="font-mono text-sm font-semibold tracking-wider text-white"
+          />
+        </div>
       </div>
 
-      <div className="p-6">
-        {/* Borrower & Amount Header */}
-        <div className="pb-5 border-b border-gray-100">
-          <div className="flex items-start justify-between">
+      {/* Tabs */}
+      <div className="flex border-b border-purple-100 bg-[#FAF9FD] px-5 pt-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("direct")}
+          className={`pb-2.5 text-sm font-bold transition-all cursor-pointer relative mr-6 ${
+            activeTab === "direct"
+              ? "text-[#7635DC] border-b-2 border-[#7635DC]"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Direct Transfer
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("qr")}
+          className={`pb-2.5 text-sm font-bold transition-all cursor-pointer relative ${
+            activeTab === "qr"
+              ? "text-[#7635DC] border-b-2 border-[#7635DC]"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Scan QRCode
+        </button>
+      </div>
 
-            <div className="text-right">
-              <p className="text-xs text-gray-400 font-medium">Due Amount</p>
-              <div className="flex items-center gap-1.5 mt-0.5 justify-end">
-                <span className="text-xl font-bold text-gray-900 tracking-tight">₹{amount}</span>
+      {/* Tab Content */}
+      {activeTab === "direct" ? (
+        <div className="p-4 space-y-3.5 bg-[#F6F5FD]">
+          {/* Card 1: Select Payment Method */}
+          <div className="bg-[#EBE7FA] rounded-2xl p-3.5 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-800 mb-2.5">
+              Select Payment Method
+            </h3>
+            <div className="grid grid-cols-2 gap-2.5">
+              {PAYMENT_METHODS.map((method) => {
+                const isSelected = selectedMethod === method.id;
+                return (
+                  <button
+                    type="button"
+                    key={method.id}
+                    onClick={() => setSelectedMethod(method.id)}
+                    className={`bg-white rounded-xl p-2.5 flex items-center gap-2.5 shadow-sm border transition-all cursor-pointer text-left ${
+                      isSelected
+                        ? "border-[#7635DC] ring-1 ring-[#7635DC]"
+                        : "border-transparent hover:border-gray-200"
+                    }`}
+                  >
+                    <img
+                      src={method.icon}
+                      alt={method.label}
+                      className="h-5 w-auto max-w-[45px] object-contain"
+                    />
+                    <span className="text-xs font-bold text-gray-800 truncate">
+                      {method.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 2: Notice Box */}
+          <div className="bg-[#DCD5F7] rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 shadow-sm">
+            <div className="w-5 h-5 rounded-full bg-[#7635DC]/15 flex items-center justify-center shrink-0">
+              <svg
+                className="w-3.5 h-3.5 text-[#7635DC]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <p className="text-[11px] text-[#3e1e82] font-semibold leading-tight">
+              Payment can only be made once. Multiple payments are not valid!!!
+            </p>
+          </div>
+
+          {/* Card 3: Transfer & UTR Card */}
+          <div className="bg-[#EBE7FA] rounded-2xl p-3.5 space-y-3.5 shadow-sm">
+            {/* 1. Transfer RS to the following upi */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-800 mb-2">
+                1. Transfer RS to the following upi
+              </h4>
+              <div className="space-y-2">
+                {/* UPI Box */}
+                <div className="bg-white rounded-xl h-10 px-3 flex items-center justify-between shadow-sm">
+                  <span className="text-xs font-mono font-medium text-gray-700 truncate max-w-[220px]">
+                    {paymentId}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => copyText(paymentId, setCopiedVpa)}
+                    className="text-gray-400 hover:text-[#7635DC] transition-colors p-1 cursor-pointer"
+                    title="Copy UPI ID"
+                  >
+                    {copiedVpa ? (
+                      <span className="text-[10px] font-bold text-green-600">Copied!</span>
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                {/* Amount Box */}
+                <div className="bg-white rounded-xl h-10 px-3 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="font-bold text-gray-700">RS</span>
+                    <span className="font-bold text-gray-900">{amount}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyText(amount, setCopiedAmount)}
+                    className="text-gray-400 hover:text-[#7635DC] transition-colors p-1 cursor-pointer"
+                    title="Copy Amount"
+                  >
+                    {copiedAmount ? (
+                      <span className="text-[10px] font-bold text-green-600">Copied!</span>
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Submit Ref No/Reference No/UTR */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-800 mb-2">
+                2. Submit Ref No/Reference No/UTR
+              </h4>
+              <div className="bg-white rounded-xl p-1 pl-3 flex items-center justify-between shadow-sm">
+                <input
+                  type="text"
+                  id="utrInput"
+                  value={utr}
+                  onChange={(e) => {
+                    setUtr(e.target.value);
+                    if (utrError) setUtrError("");
+                  }}
+                  placeholder="UTR(UPI Ref.ID)"
+                  className="w-full text-xs text-gray-800 placeholder:text-gray-400 bg-transparent outline-none font-mono pr-2"
+                />
                 <button
                   type="button"
-                  onClick={() => copyText(amount, setCopiedAmount)}
-                  className="text-[11px] font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200/80 px-2 py-0.5 rounded transition-all cursor-pointer"
+                  id="submitUtrBtn"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="bg-[#7635DC] hover:bg-[#6829D1] disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-all shrink-0"
                 >
-                  {copiedAmount ? "Copied" : "Copy"}
+                  {submitting ? "..." : "Submit"}
                 </button>
+              </div>
+              {utrError && (
+                <p className="text-[11px] text-red-500 mt-1 pl-1 font-medium">{utrError}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Footer UPI | BHIM Logo */}
+          <div className="pt-3 pb-2 text-center flex flex-col items-center justify-center">
+            <div className="flex items-center gap-1.5 opacity-70">
+              <span className="text-gray-400 font-extrabold italic text-sm tracking-wider">UPI</span>
+              <span className="text-gray-300 font-bold">|</span>
+              <span className="text-gray-400 font-bold text-xs tracking-wide">BHIM</span>
+              <div className="flex gap-0.5 ml-1">
+                <span className="w-1.5 h-3 bg-[#FF9933] rounded-xs" />
+                <span className="w-1.5 h-3 bg-[#138808] rounded-xs" />
               </div>
             </div>
           </div>
         </div>
+      ) : (
+        /* Scan QRCode Tab */
+        <div className="p-4 space-y-3.5 bg-[#F6F5FD] text-center">
+          <div className="bg-white rounded-2xl p-5 shadow-sm max-w-[260px] mx-auto border border-purple-50">
+            <p className="text-xs font-semibold text-gray-500 mb-2">Scan & Pay ₹{amount}</p>
+            <div className="w-[180px] h-[180px] mx-auto bg-gray-50 p-2 rounded-xl border border-gray-100 flex items-center justify-center">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                  `upi://pay?pa=${paymentId}&pn=${encodeURIComponent(name ?? "Merchant")}&am=${amount}&cu=INR`
+                )}`}
+                alt="UPI QR Code"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <p className="text-[11px] text-gray-400 mt-2 font-mono truncate">{paymentId}</p>
+          </div>
 
-        {/* UPI ID / VPA field */}
-        <div className="py-4 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">UPI ID / VPA</span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-gray-800 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-                {paymentId}
-              </span>
+          <div className="bg-[#DCD5F7] rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 shadow-sm text-left">
+            <p className="text-[11px] text-[#3e1e82] font-semibold leading-tight">
+              After completing payment via QR code, enter UTR number below to confirm.
+            </p>
+          </div>
+
+          {/* UTR Input */}
+          <div className="bg-[#EBE7FA] rounded-2xl p-3.5 text-left shadow-sm">
+            <h4 className="text-xs font-bold text-gray-800 mb-2">
+              Submit Ref No/Reference No/UTR
+            </h4>
+            <div className="bg-white rounded-xl p-1 pl-3 flex items-center justify-between shadow-sm">
+              <input
+                type="text"
+                value={utr}
+                onChange={(e) => {
+                  setUtr(e.target.value);
+                  if (utrError) setUtrError("");
+                }}
+                placeholder="UTR(UPI Ref.ID)"
+                className="w-full text-xs text-gray-800 placeholder:text-gray-400 bg-transparent outline-none font-mono pr-2"
+              />
               <button
                 type="button"
-                onClick={() => copyText(paymentId, setCopiedVpa)}
-                className="text-[11px] font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200/80 px-2.5 py-1 rounded transition-all cursor-pointer"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="bg-[#7635DC] hover:bg-[#6829D1] disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-all shrink-0"
               >
-                {copiedVpa ? "Copied" : "Copy"}
+                {submitting ? "..." : "Submit"}
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Minimal Notice */}
-        <div className="my-4 p-3 bg-amber-50/50 rounded-xl border border-amber-100/70 text-xs text-amber-900/80 leading-relaxed space-y-1">
-          <p className="font-semibold text-amber-950 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Important Notice
-          </p>
-          <p className="text-[11px] text-amber-900/75 pl-3">
-            • Each UPI ID can only receive payment once.<br />
-            • Do not alter the payment amount, otherwise the order will not settle.
-          </p>
-        </div>
-
-        {/* Payment Methods - 2 Columns */}
-        <div className="py-3 border-b border-gray-100">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
-            Select Payment App
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            {PAYMENT_METHODS.map((method) => {
-              const isSelected = selectedMethod === method.id;
-              return (
-                <button
-                  type="button"
-                  key={method.id}
-                  onClick={() => setSelectedMethod(method.id)}
-                  className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left cursor-pointer ${isSelected
-                      ? "border-[#5F259F] bg-[#5F259F]/5 ring-1 ring-[#5F259F]"
-                      : "border-gray-100 hover:border-gray-200 bg-white hover:bg-gray-50/50"
-                    }`}
-                >
-                  <img
-                    src={method.icon}
-                    alt={method.label}
-                    className="h-7 w-auto max-w-[85px] object-contain"
-                  />
-                  <span
-                    className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all ${isSelected
-                        ? "border-[#5F259F] bg-[#5F259F]"
-                        : "border-gray-300 bg-transparent"
-                      }`}
-                  >
-                    {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* UTR Input */}
-        <div className="pt-4">
-          <label htmlFor="utrInput" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            Enter Transaction UTR
-          </label>
-          <input
-            type="text"
-            id="utrInput"
-            value={utr}
-            onChange={(e) => {
-              setUtr(e.target.value);
-              if (utrError) setUtrError("");
-            }}
-            placeholder="12-digit UTR number"
-            className="w-full h-11 px-3.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#5F259F] focus:ring-1 focus:ring-[#5F259F] transition-all font-mono"
-          />
-          {utrError && (
-            <p className="text-xs text-red-500 mt-1.5 pl-0.5">{utrError}</p>
-          )}
-
-          <button
-            type="button"
-            id="submitUtrBtn"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full h-11 mt-3 bg-[#5F259F] hover:bg-[#4d1d84] active:scale-[0.99] disabled:opacity-50 text-white font-medium text-sm rounded-xl transition-all cursor-pointer shadow-sm shadow-[#5F259F]/20"
-          >
-            {submitting ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-                Submitting...
-              </span>
-            ) : (
-              "Submit UTR"
+            {utrError && (
+              <p className="text-[11px] text-red-500 mt-1 pl-1 font-medium">{utrError}</p>
             )}
-          </button>
-        </div>
-
-        {/* Minimal Footer */}
-        <div className="pt-6 mt-4 border-t border-gray-100 text-center">
-          <div className="flex items-center justify-center gap-4 mb-2 opacity-60">
-            <img src="/payment/phonepe.png" alt="PhonePe" className="h-4 w-auto object-contain" />
-            <img src="/payment/gpay.png" alt="G Pay" className="h-3.5 w-auto object-contain" />
-            <img src="/payment/paytm.png" alt="Paytm" className="h-3.5 w-auto object-contain" />
           </div>
-          <p className="text-[11px] text-gray-400">
-            256-bit encrypted transfer · ICICI Bank guaranteed
-          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
 export default function PaymentPage() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-white">
-      <div className="w-full max-w-[420px]">
+    <main className="min-h-screen w-full flex items-center justify-center p-3 sm:p-6 bg-white sm:bg-[#F0EEF8]">
+      <div className="w-full max-w-[390px]">
         <Suspense
           fallback={
-            <div className="w-full bg-white rounded-2xl border border-gray-100 p-8 shadow-sm text-center">
+            <div className="w-full bg-white rounded-3xl p-8 shadow-sm text-center">
               <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-gray-100 rounded w-3/4 mx-auto" />
                 <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto" />
