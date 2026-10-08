@@ -63,12 +63,7 @@ export default function ExpiredPaymentLink({
         {message || defaultMessage}
       </p>
 
-      <Link
-        href="/admin"
-        className="w-full h-[55px] flex items-center justify-center bg-[#7928CA] hover:bg-[#6820b0] active:bg-[#581a95] text-white font-semibold rounded-[8px] transition-colors duration-200 shadow-sm"
-      >
-        {buttonText}
-      </Link>
+  
     </div>
   );
 }
